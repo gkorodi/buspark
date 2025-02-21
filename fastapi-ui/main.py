@@ -1,5 +1,5 @@
 from typing import Annotated
-from fastapi import FastAPI, Request, Form, status
+from fastapi import FastAPI, Request, Form, status, HTTPException
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -42,9 +42,12 @@ async def get_post_by_id(request: Request, id: str):
         with open(file_path, 'r') as file:
             post_content = json.load(file)
     except FileNotFoundError:
-        post_content = {
-            "status": "ERROR", "message": f"File not found: {file_path}"
-        }
+        raise HTTPException(
+            status_code=404,
+            detail=f"Post {id} not found",
+            headers={"X-Error": "The filename has a parrent of post_{id}.json"},
+        )
+
     except json.JSONDecodeError:
         post_content = {
             "status": "ERROR", "message": f"Error: Invalid JSON format in: {file_path}"
