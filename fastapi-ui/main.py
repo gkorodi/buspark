@@ -3,10 +3,19 @@ from fastapi import FastAPI, Request, Form, status, HTTPException
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from pydantic import BaseModel
+
 import os
 import json
 
 app = FastAPI()
+
+
+class Post(BaseModel):
+    id: str
+    title: str
+    text_copy: str | None = None
+
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
@@ -93,6 +102,22 @@ async def add_new_post(request: Request, id: Annotated[str, Form()], title: Anno
 
     # https://stackoverflow.com/questions/63682956/fastapi-retrieve-url-from-view-name-route-name
     return RedirectResponse(app.url_path_for('get_all_posts'), status_code=status.HTTP_303_SEE_OTHER)
+
+
+@app.put("/api/post")
+async def create_new_post(post: Post):
+    """Create a new Post file from JSON in the request body
+    example: curl -X PUT http://localhost:8000/api/post -H "Content-type: application/json" --data '{"id":"103","title":"test","text_copiy":"aaaa"}'
+    """
+    file_path = f"post_{post.id}.json"
+
+    with open(file_path, 'w') as fp:
+        json.dump({
+            "id": post.id,
+            "title": post.title,
+            "content": post.text_copy
+        }, fp)
+    return post
 
 
 def delete_file_if_exists(filename):
