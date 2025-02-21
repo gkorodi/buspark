@@ -55,7 +55,7 @@ async def get_post_by_id(request: Request, id: str):
         }
 
     return templates.TemplateResponse(
-        request=request, name="post.jinja", context={"post_content": post_content}
+        request=request, name="post.jinja", context={"post": post_content}
     )
 
 
@@ -90,3 +90,24 @@ async def add_new_post(request: Request, id: Annotated[str, Form()], title: Anno
 
     # https://stackoverflow.com/questions/63682956/fastapi-retrieve-url-from-view-name-route-name
     return RedirectResponse(app.url_path_for('get_all_posts'), status_code=status.HTTP_303_SEE_OTHER)
+
+
+def delete_file_if_exists(filename):
+    """Deletes a file if it exists in the current directory.
+
+    Args:
+        filename: The name of the file to delete.
+    """
+    if os.path.exists(filename):
+        try:
+            os.remove(filename)
+            return f"File '{filename}' deleted successfully."
+        except Exception as e:
+            return f"Error deleting file '{filename}': {e}"
+    else:
+        return f"File '{filename}' not found."
+
+
+@app.delete("/posts/{id}")
+async def delete_post(request: Request, id: str) -> str:
+    return delete_file_if_exists(f"post_{id}.json")

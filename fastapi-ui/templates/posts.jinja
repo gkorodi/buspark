@@ -8,9 +8,9 @@
 <tbody>
 {% for post in posts %}
 <tr>
-<td>{{ post.id }}</td>
+<td><a href="{{ url_for("get_post_by_id", id = post.id)}}">{{ post.id }}</td>
 <td>{{ post.title }}</td>
-<td>{{ post.content }}</td>
+<td>{{ post.content|safe }}</td>
 </tr>
 {% endfor %}
 </tbody>
