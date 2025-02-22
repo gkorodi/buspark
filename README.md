@@ -70,6 +70,18 @@ nohup fastapi dev --host 0.0.0.0 --port 8001 main.py &
 
 ```
 
+### For AWS EC2
+
+```sh
+sudo apt-get update 
+sudo apt-get install -y python3-pip
+sudo apt-get install -y python3-venv
+python3 -m venv venv
+source venv/bin/activate
+pip install "fastapi[standard]"
+
+```
+
 
 ### Notes
 
