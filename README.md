@@ -1,10 +1,8 @@
-# BU Spark! Hackathon
-
-# FastAPI presentation
+# BU Spark! Hackathon - FastAPI
 
 The website: [https://fastapi.tiangolo.com/](https://fastapi.tiangolo.com/)
 
-## Up and Running
+## Local
 
 ```sh
 # Create an '/app' directory
