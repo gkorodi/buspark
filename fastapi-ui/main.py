@@ -4,7 +4,8 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
-
+import csv
+import requests
 import os
 import json
 
@@ -85,6 +86,47 @@ async def get_all_posts(request: Request):
     posts = getAllPosts()
     return templates.TemplateResponse(
         request=request, name="posts.jinja", context={"posts": posts}
+    )
+
+
+def csv_url_to_dict(url):
+    """
+    Reads a CSV file from a URL and returns a list of dictionaries.
+
+    Args:
+        url (str): The URL of the CSV file.
+
+    Returns:
+        list: A list of dictionaries, where each dictionary represents a row in the CSV file.
+              Keys of the dictionaries are the header fields of the CSV.
+              Returns an empty list if there's an error.
+    """
+    try:
+        response = requests.get(url, stream=True)
+        response.raise_for_status()
+
+        csv_data = csv.DictReader(response.text.splitlines())
+        return list(csv_data)
+    except requests.exceptions.RequestException as e:
+        print(f"Request error: {e}")
+        return []
+    except csv.Error as e:
+        print(f"CSV error: {e}")
+        return []
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
+        return []
+
+
+@app.get("/events")
+async def get_all_events(request: Request):
+    csv_url = "https://data.boston.gov/dataset/9076010d-663a-40da-b683-a46ec4d09555/resource/ea7f0605-ffc0-4ad4-a786-02c50b276f54/download/tmpmxxupepy.csv"
+    data = csv_url_to_dict(csv_url)
+
+    events = [d for d in data if d['status']
+              not in ['Expired', 'Cancelled', 'Inactive']]
+    return templates.TemplateResponse(
+        request=request, name="events.jinja", context={"events": events}
     )
 
 

@@ -1,0 +1,24 @@
+{% extends 'layout.jinja' %}
+
+{% block content %}
+
+<h1>Events</h1>
+<style>
+ tr.Active {
+    background-color: #f0f0f0;
+ }
+</style>
+<table class="table">
+<tbody>
+{% for event in events %}
+<tr class="{{event.status}}">
+<td>{{event.issued}} - {{event.expires}}</td>
+<td>{{event.dba_name}}</td>
+<td>{{event.address}}, {{event.city}} {{event.state}}</td>
+<td>{{event.status}}</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+
+{% endblock %}
