@@ -24,6 +24,7 @@ templates = Jinja2Templates(directory="templates")
 
 @app.get("/", response_class=HTMLResponse, name="home")
 async def home(request: Request):
+    """Home Page, where everything starts from."""
     return templates.TemplateResponse(
         request=request, name="home.jinja", context={}
     )
@@ -31,6 +32,7 @@ async def home(request: Request):
 
 @app.get("/about", response_class=HTMLResponse)
 async def about(request: Request):
+    """Every app should have an About page with some useful information."""
     return templates.TemplateResponse(
         request=request, name="about.jinja", context={}
     )
@@ -38,6 +40,7 @@ async def about(request: Request):
 
 @app.get("/contact", response_class=HTMLResponse)
 async def contact(request: Request):
+    """The Contact page has some limited information about where to contact the business."""
     return templates.TemplateResponse(
         request=request, name="contact.jinja", context={}
     )
