@@ -52,13 +52,13 @@ async def contact(request: Request):
     return templates.TemplateResponse(request=request, name="contact.jinja", context={})
 
 
-@app.get("/posts/{id}", response_class=HTMLResponse)
-async def get_post_by_id(request: Request, id: str):
+@app.get("/posts/{post_id}", response_class=HTMLResponse)
+async def get_post_by_id(request: Request, post_id: str):
     """
     Our imaginary blogging system has a URL where the details of a post can be retrieved from
     and displayed, if found, as an individual page.
     """
-    file_path = f"post_{id}.json"
+    file_path = f"post_{post_id}.json"
 
     post_content = {}
     try:
@@ -67,8 +67,8 @@ async def get_post_by_id(request: Request, id: str):
     except FileNotFoundError as exc:
         raise HTTPException(
             status_code=404,
-            detail=f"Post {id} not found",
-            headers={"X-Error": "The filename has a parrent of post_{id}.json"},
+            detail=f"Post {post_id} not found",
+            headers={"X-Error": "The filename has a parrent of post_{post_id}.json"},
         ) from exc
 
     except json.JSONDecodeError:
@@ -119,17 +119,14 @@ def csv_url_to_dict(url):
 
         csv_data = csv.DictReader(response.text.splitlines())
         return list(csv_data)
-    except requests.exceptions.RequestException as e:
-        print(f"Request error: {e}")
-        return []
     except requests.exceptions.Timeout:
         print("Timed out")
         return []
+    except requests.exceptions.RequestException as e:
+        print(f"Request error: {e}")
+        return []
     except csv.Error as e:
         print(f"CSV error: {e}")
-        return []
-    except Exception as e:
-        print(f"An unexpected error occurred: {e}")
         return []
 
 
@@ -156,16 +153,17 @@ async def get_all_events(request: Request):
 
 @app.post("/posts", response_class=RedirectResponse)
 async def add_new_post(
-    request: Request,
-    id: Annotated[str, Form()],
+    post_id: Annotated[str, Form()],
     title: Annotated[str, Form()],
     copy_text: Annotated[str, Form()],
 ):
+    """
+    Take Form fields and create a 'Post' file from it.
+    """
+    file_path = f"post_{post_id}.json"
 
-    file_path = f"post_{id}.json"
-
-    with open(file_path, "w") as fp:
-        json.dump({"id": id, "title": title, "content": copy_text}, fp)
+    with open(file_path, "w", encoding="UTF-8") as fp:
+        json.dump({"id": post_id, "title": title, "content": copy_text}, fp)
 
     # https://stackoverflow.com/questions/63682956/fastapi-retrieve-url-from-view-name-route-name
     return RedirectResponse(
@@ -176,11 +174,18 @@ async def add_new_post(
 @app.put("/api/post")
 async def create_new_post(post: Post):
     """Create a new Post file from JSON in the request body
-    example: curl -X PUT http://localhost:8000/api/post -H "Content-type: application/json" --data '{"id":"103","title":"test","text_copiy":"aaaa"}'
+    example:
+
+    ```sh
+    curl -X PUT http://localhost:8000/api/post &&
+        -H "Content-type: application/json" &&
+        --data '{"id":"103","title":"test","text_copiy":"aaaa"}'
+
+    ```
     """
     file_path = f"post_{post.id}.json"
 
-    with open(file_path, "w") as fp:
+    with open(file_path, "w", encoding="UTF-8") as fp:
         json.dump({"id": post.id, "title": post.title, "content": post.text_copy}, fp)
     return post
 
@@ -195,12 +200,16 @@ def delete_file_if_exists(filename):
         try:
             os.remove(filename)
             return f"File '{filename}' deleted successfully."
-        except Exception as e:
+        except FileNotFoundError as e:
             return f"Error deleting file '{filename}': {e}"
     else:
         return f"File '{filename}' not found."
 
 
-@app.delete("/posts/{id}")
-async def delete_post(request: Request, id: str) -> str:
-    return delete_file_if_exists(f"post_{id}.json")
+@app.delete("/posts/{post_id}")
+async def delete_post(post_id: str) -> str:
+    """
+    Using simple API call with HTTP 'DELETE' method, to
+    remove a post (delete the file) by its ID.
+    """
+    return delete_file_if_exists(f"post_{post_id}.json")
